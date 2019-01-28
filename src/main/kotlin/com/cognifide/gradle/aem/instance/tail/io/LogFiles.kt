@@ -11,9 +11,9 @@ import java.net.URI
 import org.apache.commons.io.FileUtils
 
 class LogFiles(
-    private val options: TailOptions,
+    private val taskName: String,
     private val aem: AemExtension,
-    private val taskName: String
+    private val options: TailOptions
 ) {
 
     fun mainUri(instanceName: String) = uri(main(instanceName))
@@ -41,17 +41,6 @@ class LogFiles(
         return lockFile.exists() && lockFile.lastModified() + options.lockInterval > System.currentTimeMillis()
     }
 
-    fun shouldShowUsageNotification(): Boolean {
-        if (isLocked()) return false
-        val notify = notificationFile()
-        if (notify.exists() &&
-            notify.lastModified() + TailOptions.USAGE_NOTIFICATION_INTERVAL > System.currentTimeMillis()) {
-            return false
-        }
-        lock(notify)
-        return true
-    }
-
     private fun main(instanceName: String) =
         AemTask.temporaryFile(aem.project, "$taskName/$instanceName", options.logFile())
 
@@ -75,14 +64,6 @@ class LogFiles(
             aem.project,
             taskName,
             "tailer.lock"
-        )
-    }
-
-    private fun notificationFile(): File {
-        return AemTask.temporaryFile(
-            aem.project,
-            taskName,
-            "tailer.notify"
         )
     }
 

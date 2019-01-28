@@ -109,7 +109,7 @@ open class Deploy : Sync() {
 
     @TaskAction
     open fun deploy() {
-        tailTaskNotification()
+        tail { startInBackground() }
 
         aem.progress(instances.size * packages.size) {
             aem.syncPackages(instances, packages) { pkg ->
@@ -128,14 +128,14 @@ open class Deploy : Sync() {
         }
 
         completer()
-
+        tail { stop() }
         aem.notifier.notify("Package deployed", "${packages.fileNames} on ${instances.names}")
     }
 
-    private fun tailTaskNotification() {
+    private fun tail(block: Tail.() -> Unit) {
         val tail = aem.project.tasks.find { it is Tail }
         if (tail is Tail) {
-            tail.showUsageNotification()
+            tail.block()
         }
     }
 
