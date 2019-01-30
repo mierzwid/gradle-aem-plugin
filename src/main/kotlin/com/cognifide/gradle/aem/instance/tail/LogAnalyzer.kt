@@ -82,7 +82,7 @@ class Blacklist(
 
     private fun loadConfiguredBlacklists(blacklists: List<String>): List<List<Log>> {
         return blacklists.map { logFile ->
-            FileOperations.fromPathOrClasspath(logFile) { reader ->
+            FileOperations.readerFromPathOrClasspath(logFile) { reader ->
                 parser.parseLogs(reader)
             }
         }

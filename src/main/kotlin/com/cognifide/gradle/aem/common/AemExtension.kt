@@ -6,6 +6,7 @@ import com.cognifide.gradle.aem.common.http.HttpClient
 import com.cognifide.gradle.aem.config.Config
 import com.cognifide.gradle.aem.config.ConfigPlugin
 import com.cognifide.gradle.aem.instance.*
+import com.cognifide.gradle.aem.instance.docker.DockerOptions
 import com.cognifide.gradle.aem.pkg.PackagePlugin
 import com.cognifide.gradle.aem.pkg.tasks.Compose
 import com.cognifide.gradle.aem.tooling.*
@@ -120,6 +121,11 @@ open class AemExtension(@Internal val project: Project) {
     val instances: List<Instance>
         get() = filterInstances()
 
+    @Internal
+    val dockerOptions = DockerOptions()
+
+    fun docker(configurer: DockerOptions.() -> Unit) = dockerOptions.apply(configurer)
+
     fun instances(consumer: (Instance) -> Unit) = parallelWith(instances, consumer)
 
     fun instances(filter: String, consumer: (Instance) -> Unit) = parallelWith(filterInstances(filter), consumer)
@@ -150,7 +156,10 @@ open class AemExtension(@Internal val project: Project) {
         throw InstanceException("Instance named '$nameMatcher' is not defined.")
     }
 
-    fun filterInstances(nameMatcher: String = props.string("aem.instance.name") ?: "$environment-*"): List<Instance> {
+    fun filterInstances(
+        nameMatcher: String = props.string("aem.instance.name")
+?: "$environment-*"
+    ): List<Instance> {
         val all = config.instances.values
 
         // Specified by command line should not be filtered
@@ -202,12 +211,12 @@ open class AemExtension(@Internal val project: Project) {
     @get:Internal
     val packages: List<File>
         get() = project.tasks.withType(Compose::class.java)
-                .map { it.archivePath }
+            .map { it.archivePath }
 
     fun packagesDependent(task: Task): List<File> {
         return task.taskDependencies.getDependencies(task)
-                .filterIsInstance(Compose::class.java)
-                .map { it.archivePath }
+            .filterIsInstance(Compose::class.java)
+            .map { it.archivePath }
     }
 
     fun sync(synchronizer: InstanceSync.() -> Unit) = sync(instances, synchronizer)
@@ -223,8 +232,10 @@ open class AemExtension(@Internal val project: Project) {
         packages: Collection<File>,
         synchronizer: InstanceSync.(File) -> Unit
     ) {
-        packages.forEach { pkg -> // single AEM instance dislikes parallel package installation
-            parallelWith(instances) { // but same package could be in parallel deployed on different AEM instances
+        packages.forEach { pkg ->
+            // single AEM instance dislikes parallel package installation
+            parallelWith(instances) {
+                // but same package could be in parallel deployed on different AEM instances
                 sync.apply { synchronizer(pkg) }
             }
         }
@@ -288,15 +299,15 @@ open class AemExtension(@Internal val project: Project) {
             val cmdFilterPath = props.string("aem.filter.path") ?: ""
             if (cmdFilterPath.isNotEmpty()) {
                 val cmdFilter = FileOperations.find(project, config.packageVltRoot, cmdFilterPath)
-                        ?: throw VltException("Vault check out filter file does not exist at path: $cmdFilterPath" +
-                                " (or under directory: ${config.packageVltRoot}).")
+                    ?: throw VltException("Vault check out filter file does not exist at path: $cmdFilterPath" +
+                        " (or under directory: ${config.packageVltRoot}).")
                 logger.debug("Using Vault filter file specified as command line property: $cmdFilterPath")
                 return VltFilter(cmdFilter)
             }
 
             val conventionFilterFiles = listOf(
-                    "${config.packageVltRoot}/${VltFilter.CHECKOUT_NAME}",
-                    "${config.packageVltRoot}/${VltFilter.BUILD_NAME}"
+                "${config.packageVltRoot}/${VltFilter.CHECKOUT_NAME}",
+                "${config.packageVltRoot}/${VltFilter.BUILD_NAME}"
             )
             val conventionFilterFile = FileOperations.find(project, config.packageVltRoot, conventionFilterFiles)
             if (conventionFilterFile != null) {
@@ -346,16 +357,16 @@ open class AemExtension(@Internal val project: Project) {
         const val NAME = "aem"
 
         private val PLUGIN_IDS = listOf(
-                PackagePlugin.ID,
-                BundlePlugin.ID,
-                InstancePlugin.ID,
-                ToolingPlugin.ID,
-                ConfigPlugin.ID
+            PackagePlugin.ID,
+            BundlePlugin.ID,
+            InstancePlugin.ID,
+            ToolingPlugin.ID,
+            ConfigPlugin.ID
         )
 
         fun of(project: Project): AemExtension {
             return project.extensions.findByType(AemExtension::class.java)
-                    ?: throw AemException("${project.displayName.capitalize()} must have at least one of following plugins applied: $PLUGIN_IDS")
+                ?: throw AemException("${project.displayName.capitalize()} must have at least one of following plugins applied: $PLUGIN_IDS")
         }
     }
 }

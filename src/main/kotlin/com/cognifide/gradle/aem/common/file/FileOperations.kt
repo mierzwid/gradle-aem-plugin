@@ -19,15 +19,18 @@ import org.zeroturnaround.zip.ZipUtil
 
 object FileOperations {
 
-    fun <T> fromPathOrClasspath(resource: String, parser: (BufferedReader) -> T): T =
-            BufferedReader(InputStreamReader(fromPathOrClasspath(resource))).use(parser)
+    fun <T> readerFromPathOrClasspath(resource: String, parser: (BufferedReader) -> T): T =
+        BufferedReader(InputStreamReader(fromPathOrClasspath(resource))).use(parser)
+
+    fun <T> streamFromPathOrClasspath(resourcePath: String, reader: (InputStream) -> T): T =
+        fromPathOrClasspath(resourcePath).use { reader(it) }
 
     fun <T> optionalFromPathOrClasspath(resource: String, parser: (BufferedReader) -> T): T? =
-            try {
-                fromPathOrClasspath(resource, parser)
-            } catch (e: AemException) {
-                null
-            }
+        try {
+            readerFromPathOrClasspath(resource, parser)
+        } catch (e: AemException) {
+            null
+        }
 
     private fun fromPathOrClasspath(resourcePath: String): InputStream {
         val resourceFile = File(resourcePath)
@@ -42,7 +45,7 @@ object FileOperations {
         if (resource != null) {
             return GFileUtils.openInputStream(File(resource.file))
         }
-        throw AemException("Cannot load blacklist from file: $resourcePath")
+        throw FileException("Cannot load file: $resourcePath")
     }
 
     fun fromAemPkg(path: String): InputStream? {
@@ -109,9 +112,9 @@ object FileOperations {
         }
 
         return mutableListOf<(String) -> File>(
-                { project.file(pathOrFileName) },
-                { File(File(dirIfFileName), pathOrFileName) },
-                { File(pathOrFileName) }
+            { project.file(pathOrFileName) },
+            { File(File(dirIfFileName), pathOrFileName) },
+            { File(pathOrFileName) }
         ).map { it(pathOrFileName) }.firstOrNull { it.exists() }
     }
 
