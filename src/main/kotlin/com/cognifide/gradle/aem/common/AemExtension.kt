@@ -5,8 +5,9 @@ import com.cognifide.gradle.aem.common.file.FileOperations
 import com.cognifide.gradle.aem.common.http.HttpClient
 import com.cognifide.gradle.aem.config.Config
 import com.cognifide.gradle.aem.config.ConfigPlugin
+import com.cognifide.gradle.aem.environment.EnvironmentPlugin
+import com.cognifide.gradle.aem.environment.docker.DockerOptions
 import com.cognifide.gradle.aem.instance.*
-import com.cognifide.gradle.aem.instance.docker.DockerOptions
 import com.cognifide.gradle.aem.pkg.PackagePlugin
 import com.cognifide.gradle.aem.pkg.tasks.Compose
 import com.cognifide.gradle.aem.tooling.*
@@ -360,6 +361,7 @@ open class AemExtension(@Internal val project: Project) {
             PackagePlugin.ID,
             BundlePlugin.ID,
             InstancePlugin.ID,
+            EnvironmentPlugin.ID,
             ToolingPlugin.ID,
             ConfigPlugin.ID
         )

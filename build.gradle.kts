@@ -103,6 +103,10 @@ gradlePlugin {
             id = "com.cognifide.aem.instance"
             implementationClass = "com.cognifide.gradle.aem.instance.InstancePlugin"
         }
+        create("environment") {
+            id = "com.cognifide.aem.environment"
+            implementationClass = "com.cognifide.gradle.aem.environment.EnvironmentPlugin"
+        }
     }
 }
 
