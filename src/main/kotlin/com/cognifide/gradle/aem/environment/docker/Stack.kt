@@ -12,6 +12,9 @@ import de.gesellix.docker.client.stack.DeployStackOptions
 import java.io.FileNotFoundException
 import java.net.SocketException
 import java.nio.file.Paths
+import kotlin.system.measureTimeMillis
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 class Stack(
     private val aem: AemExtension,
@@ -22,10 +25,19 @@ class Stack(
 
     fun deploy() {
         aem.logger.lifecycle("Stack: ${options.stackName}")
-        docker {
-            initSwarmIfNotInitialized()
-            stackDeploy(options.stackName, options.composeFilePath)
-            serviceAwait.await()
+        docker { initSwarmIfNotInitialized() }
+        runBlocking {
+            repeat(numberOfTests) { iteration ->
+                val executionTime = measureTimeMillis {
+                    docker {
+                        stackDeploy(options.stackName, options.composeFilePath)
+                        serviceAwait.await()
+                    }
+                }
+                aem.logger.lifecycle("$iteration\t$executionTime\t")
+                rm()
+                delay(waitingTimeForStackToBeRemoved)
+            }
         }
     }
 
@@ -91,5 +103,10 @@ class Stack(
                 throw DockerException("Failed to initialize Docker Swarm", dce)
             }
         }
+    }
+
+    companion object {
+        const val waitingTimeForStackToBeRemoved = 10000L
+        const val numberOfTests = 30
     }
 }

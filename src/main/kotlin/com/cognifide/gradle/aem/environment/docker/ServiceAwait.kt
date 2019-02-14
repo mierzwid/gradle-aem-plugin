@@ -58,6 +58,6 @@ class ServiceAwait(aem: AemExtension) {
     private fun noOfChecks(check: HealthCheck) = Math.max(check.maxAwaitTime / DELAY_BETWEEN_CHECKS, 1)
 
     companion object {
-        private const val DELAY_BETWEEN_CHECKS = 1000
+        private const val DELAY_BETWEEN_CHECKS = 300
     }
 }
